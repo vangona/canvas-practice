@@ -6,7 +6,6 @@
 - [x] React Canvas로 뭐라도 그려보기
 - [x] React 애니메이션 선택기 만들기
       => Event, EventHandler의 타입
-      => 타입스크립트에서의 이벤트 위임
 - [] React Canvas로 애니메이션 만들어보기
 - [] React Canvas에서 키보드 이벤트로 움직이는 사물 그리기
 
