@@ -6,7 +6,7 @@ const buttonBoxStyle = {
 
 const Map: React.FC = () => {
   const [clickAnimation, setClickAnimation] = useState(1);
-  const [animationId, setAnimationId] = useState<number>();
+  const requestAnimationRef = useRef<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const onClickButtonBox: React.MouseEventHandler = (e) => {
@@ -15,6 +15,8 @@ const Map: React.FC = () => {
       setClickAnimation(1);
     } else if (eventTarget.dataset.animation === "drawRedRectAnimation") {
       setClickAnimation(2);
+    } else if (eventTarget.dataset.animation === "stop") {
+      setClickAnimation(3);
     }
   };
 
@@ -125,24 +127,25 @@ const Map: React.FC = () => {
       ctx.stroke();
 
       ctx.restore();
+      requestAnimationRef.current = window.requestAnimationFrame(update);
     };
 
-    update();
-    const intervalId = window.setInterval(update, 1000);
-    setAnimationId(intervalId);
+    requestAnimationRef.current = window.requestAnimationFrame(update);
   };
 
   const onClickCanvas = () => {
     console.log("맵 클릭! 애니메이션 : ", clickAnimation);
     switch (clickAnimation) {
       case 1:
+        window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangle();
         break;
       case 2:
-        window.clearInterval(animationId);
+        window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangleAnimation();
         break;
       case 3:
+        window.cancelAnimationFrame(requestAnimationRef.current);
         break;
     }
   };
@@ -158,7 +161,7 @@ const Map: React.FC = () => {
         <button data-animation="drawRedRectAnimation">
           직사각형 그리기 애니메이션
         </button>
-        <button>애니메이션</button>
+        <button data-animation="stop">애니메이션</button>
       </div>
       <canvas
         width={window.innerWidth}
