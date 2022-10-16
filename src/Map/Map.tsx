@@ -2,26 +2,40 @@ import React, { useEffect, useRef, useState } from "react";
 import { ANIMATIONS } from "../constants";
 import KeyboardController from "../KeyboardController";
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 const buttonBoxStyle = {
   background: "black",
 };
 
 const Map: React.FC = () => {
+  const [keyboardController, setKeyboardController] =
+    useState<KeyboardController>();
   const [clickAnimation, setClickAnimation] = useState(
     ANIMATIONS.DRAW_RED_RECT
   );
+
   const requestAnimationRef = useRef<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const positionRef = useRef<Position>({
+    x: 0,
+    y: 0,
+  });
 
   const onKeydownHandler = (e: KeyboardEvent) => {
+    if (!keyboardController) return;
+
     if (e.key === "ArrowUp") {
-      KeyboardController.arrowUp();
+      keyboardController.arrowUp();
     } else if (e.key === "ArrowDown") {
-      KeyboardController.arrowDown();
+      keyboardController.arrowDown();
     } else if (e.key === "ArrowLeft") {
-      KeyboardController.arrowLeft();
+      keyboardController.arrowLeft();
     } else if (e.key === "ArrowRight") {
-      KeyboardController.arrowRight();
+      keyboardController.arrowRight();
     }
   };
 
@@ -146,33 +160,38 @@ const Map: React.FC = () => {
   };
 
   const drawMovingCharacter = () => {
-    const ctx = canvasRef.current!.getContext("2d")!;
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.beginPath();
-    ctx.rect(20, 40, 50, 50);
-    ctx.fillStyle = "#FF0000";
-    ctx.fill();
-    ctx.closePath();
+    const update = () => {
+      const ctx = canvasRef.current!.getContext("2d")!;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.beginPath();
+      ctx.rect(20 + positionRef.current.x, 40 + positionRef.current.y, 50, 50);
+      ctx.fillStyle = "#FF0000";
+      ctx.fill();
+      ctx.closePath();
+      requestAnimationRef.current = window.requestAnimationFrame(update);
+    };
+
+    update();
+    requestAnimationRef.current = window.requestAnimationFrame(update);
   };
 
   const onClickCanvas = () => {
     console.log("맵 클릭! 애니메이션 : ", clickAnimation);
+    // EventListner가 add 될 때의 상태를 기억하고 있기 때문에 keyboard Controller가 필요할 때만 달아주고 매번 제거
+    window.removeEventListener("keydown", onKeydownHandler);
+    window.cancelAnimationFrame(requestAnimationRef.current);
     switch (clickAnimation) {
       case ANIMATIONS.DRAW_RED_RECT:
-        window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangle();
         break;
       case ANIMATIONS.DRAW_CLOCK_ANIMATION:
-        window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangleAnimation();
         break;
       case ANIMATIONS.DRAW_MOVING_CHARACTER:
         window.addEventListener("keydown", onKeydownHandler);
-        window.cancelAnimationFrame(requestAnimationRef.current);
         drawMovingCharacter();
         break;
       case ANIMATIONS.STOP:
-        window.cancelAnimationFrame(requestAnimationRef.current);
         break;
     }
   };
@@ -183,6 +202,12 @@ const Map: React.FC = () => {
     ANIMATIONS.DRAW_MOVING_CHARACTER,
     ANIMATIONS.STOP,
   ];
+
+  useEffect(() => {
+    if (canvasRef) {
+      setKeyboardController(new KeyboardController(canvasRef, positionRef));
+    }
+  }, []);
 
   return (
     <>
