@@ -1,22 +1,34 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { ANIMATIONS } from "../constants";
+import KeyboardController from "../KeyboardController";
 
 const buttonBoxStyle = {
   background: "black",
 };
 
 const Map: React.FC = () => {
-  const [clickAnimation, setClickAnimation] = useState(1);
+  const [clickAnimation, setClickAnimation] = useState(
+    ANIMATIONS.DRAW_RED_RECT
+  );
   const requestAnimationRef = useRef<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const onKeydownHandler = (e: KeyboardEvent) => {
+    if (e.key === "ArrowUp") {
+      KeyboardController.arrowUp();
+    } else if (e.key === "ArrowDown") {
+      KeyboardController.arrowDown();
+    } else if (e.key === "ArrowLeft") {
+      KeyboardController.arrowLeft();
+    } else if (e.key === "ArrowRight") {
+      KeyboardController.arrowRight();
+    }
+  };
+
   const onClickButtonBox: React.MouseEventHandler = (e) => {
     const eventTarget = e.target as HTMLElement;
-    if (eventTarget.dataset.animation === "drawRedRect") {
-      setClickAnimation(1);
-    } else if (eventTarget.dataset.animation === "drawRedRectAnimation") {
-      setClickAnimation(2);
-    } else if (eventTarget.dataset.animation === "stop") {
-      setClickAnimation(3);
+    if (eventTarget.dataset.animation) {
+      setClickAnimation(eventTarget.dataset.animation);
     }
   };
 
@@ -133,22 +145,44 @@ const Map: React.FC = () => {
     requestAnimationRef.current = window.requestAnimationFrame(update);
   };
 
+  const drawMovingCharacter = () => {
+    const ctx = canvasRef.current!.getContext("2d")!;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.beginPath();
+    ctx.rect(20, 40, 50, 50);
+    ctx.fillStyle = "#FF0000";
+    ctx.fill();
+    ctx.closePath();
+  };
+
   const onClickCanvas = () => {
     console.log("맵 클릭! 애니메이션 : ", clickAnimation);
     switch (clickAnimation) {
-      case 1:
+      case ANIMATIONS.DRAW_RED_RECT:
         window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangle();
         break;
-      case 2:
+      case ANIMATIONS.DRAW_CLOCK_ANIMATION:
         window.cancelAnimationFrame(requestAnimationRef.current);
         drawRectangleAnimation();
         break;
-      case 3:
+      case ANIMATIONS.DRAW_MOVING_CHARACTER:
+        window.addEventListener("keydown", onKeydownHandler);
+        window.cancelAnimationFrame(requestAnimationRef.current);
+        drawMovingCharacter();
+        break;
+      case ANIMATIONS.STOP:
         window.cancelAnimationFrame(requestAnimationRef.current);
         break;
     }
   };
+
+  const animations = [
+    ANIMATIONS.DRAW_RED_RECT,
+    ANIMATIONS.DRAW_CLOCK_ANIMATION,
+    ANIMATIONS.DRAW_MOVING_CHARACTER,
+    ANIMATIONS.STOP,
+  ];
 
   return (
     <>
@@ -157,11 +191,11 @@ const Map: React.FC = () => {
         style={buttonBoxStyle}
         className="buttonBox"
       >
-        <button data-animation="drawRedRect">직사각형 그리기</button>
-        <button data-animation="drawRedRectAnimation">
-          직사각형 그리기 애니메이션
-        </button>
-        <button data-animation="stop">애니메이션</button>
+        {animations.map((animation, index) => (
+          <button key={index} data-animation={animation}>
+            {animation}
+          </button>
+        ))}
       </div>
       <canvas
         width={window.innerWidth}
