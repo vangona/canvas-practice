@@ -3,33 +3,64 @@ import { RefObject } from "react";
 interface Position {
   x: number;
   y: number;
+  movingFlag: boolean;
 }
 
 class KeyboardController {
   canvasRef: RefObject<HTMLElement>;
   positionRef: RefObject<Position>;
+  velocity: number;
+  maxVelocity: number;
+  durationTime: number;
+
   constructor(
     canvasRef: RefObject<HTMLElement>,
     positionRef: RefObject<Position>
   ) {
     this.canvasRef = canvasRef;
     this.positionRef = positionRef;
+    this.velocity = 1;
+    this.maxVelocity = 5;
+    this.durationTime = 0;
   }
+
+  keyUp() {
+    this.positionRef.current!.movingFlag = false;
+    this.velocity = 0.1;
+    this.durationTime = 0;
+  }
+
   arrowUp() {
-    this.positionRef.current!.y++;
-    console.log("위로 움직임");
+    this.durationTime += 0.1;
+    this.positionRef.current!.movingFlag = true;
+    if (this.velocity < this.maxVelocity) {
+      this.velocity += 0.2;
+    }
+    this.positionRef.current!.y -= this.velocity;
   }
   arrowDown() {
-    this.positionRef.current!.y--;
-    console.log("아래로 움직임");
+    this.durationTime += 0.1;
+    this.positionRef.current!.movingFlag = true;
+    if (this.velocity < this.maxVelocity) {
+      this.velocity += 0.2;
+    }
+    this.positionRef.current!.y += this.velocity;
   }
   arrowLeft() {
-    this.positionRef.current!.x--;
-    console.log("왼쪽으로 움직임");
+    this.durationTime += 0.1;
+    this.positionRef.current!.movingFlag = true;
+    if (this.velocity < this.maxVelocity) {
+      this.velocity += 0.2;
+    }
+    this.positionRef.current!.x -= this.velocity;
   }
   arrowRight() {
-    this.positionRef.current!.x++;
-    console.log("오른쪽으로 움직임");
+    this.durationTime += 0.1;
+    this.positionRef.current!.movingFlag = true;
+    if (this.velocity < this.maxVelocity) {
+      this.velocity += 0.2;
+    }
+    this.positionRef.current!.x += this.velocity;
   }
 }
 

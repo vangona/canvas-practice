@@ -5,6 +5,7 @@ import KeyboardController from "../KeyboardController";
 interface Position {
   x: number;
   y: number;
+  movingFlag: boolean;
 }
 
 const buttonBoxStyle = {
@@ -23,7 +24,13 @@ const Map: React.FC = () => {
   const positionRef = useRef<Position>({
     x: 0,
     y: 0,
+    movingFlag: false,
   });
+
+  const onKeyUphandler = (e: KeyboardEvent) => {
+    if (!keyboardController) return;
+    keyboardController.keyUp();
+  };
 
   const onKeydownHandler = (e: KeyboardEvent) => {
     if (!keyboardController) return;
@@ -165,7 +172,7 @@ const Map: React.FC = () => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       ctx.beginPath();
       ctx.rect(20 + positionRef.current.x, 40 + positionRef.current.y, 50, 50);
-      ctx.fillStyle = "#FF0000";
+      ctx.fillStyle = positionRef.current.movingFlag ? "blue" : "#FF0000";
       ctx.fill();
       ctx.closePath();
       requestAnimationRef.current = window.requestAnimationFrame(update);
@@ -177,8 +184,9 @@ const Map: React.FC = () => {
 
   const onClickCanvas = () => {
     console.log("맵 클릭! 애니메이션 : ", clickAnimation);
-    // EventListner가 add 될 때의 상태를 기억하고 있기 때문에 keyboard Controller가 필요할 때만 달아주고 매번 제거
+    // EventListner가 add 될 때의 상태를 기억하고 있기 때문에 keyboard Controller가 필요할 때만 달아주고 매번 제거 => 방법이 없을까?
     window.removeEventListener("keydown", onKeydownHandler);
+    window.removeEventListener("keyup", onKeyUphandler);
     window.cancelAnimationFrame(requestAnimationRef.current);
     switch (clickAnimation) {
       case ANIMATIONS.DRAW_RED_RECT:
@@ -189,6 +197,7 @@ const Map: React.FC = () => {
         break;
       case ANIMATIONS.DRAW_MOVING_CHARACTER:
         window.addEventListener("keydown", onKeydownHandler);
+        window.addEventListener("keyup", onKeyUphandler);
         drawMovingCharacter();
         break;
       case ANIMATIONS.STOP:
